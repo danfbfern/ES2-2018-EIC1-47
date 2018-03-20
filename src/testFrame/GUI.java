@@ -42,6 +42,13 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.DefaultCaret;
 
 import mailPackage.FetchingMail;
+import variable.Variable;
+import xmlPackage.CreateProbFile;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerDateModel;
+import java.util.Date;
+import java.util.Calendar;
+import javax.swing.JProgressBar;
 
 public class GUI {
 
@@ -50,14 +57,20 @@ public class GUI {
 	private JTabbedPane tabbedPaneMain;
 	private JTextField txProblem;
 	private JTextField txMail;
-	private JTextField txDescription;
+	private JEditorPane txDescription;
 	private JTextField txtVarGroup;
-	private JComboBox<Integer> comboVarNr = new JComboBox<Integer>();
+//	private JComboBox<Integer> comboVarNr = new JComboBox<Integer>();
 	private DefaultListModel<String> model;
 	private JList<String> mailList;
 	private JScrollPane mailListScroll;
 	private JButton refreshB;
 	private ArrayList<Message> msgList = new ArrayList<>();
+	private JButton btnSave = new JButton("Save");
+	
+	private JSpinner maxTime;
+	private ArrayList<Variable> varList = new ArrayList<Variable>();
+	//private CreateProbFile pFile= new CreateProbFile(this);
+	private CreateProbFile pFile= new CreateProbFile(GUI.this);
 
 	public static void main(String[] args) {
 		new GUI();
@@ -71,7 +84,7 @@ public class GUI {
 	private void addFrameContent() {
 		frame = new JFrame();
 		frame.setBounds(100, 100, 500, 500);
-		frame.setSize(900,600);
+		frame.setSize(900,700);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		frame.getContentPane().setLayout(gridBagLayout);
@@ -89,13 +102,13 @@ public class GUI {
 		
 		tabbedPaneProblem = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPaneMain.add("NEW PROBLEM", tabbedPaneProblem);
-		tabbedPaneProblem.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				if (tabbedPaneProblem.getSelectedIndex() == 1) 
-					editVariables((int) comboVarNr.getSelectedItem());
-			}
-		});
+//		tabbedPaneProblem.addChangeListener(new ChangeListener() {
+//			@Override
+//			public void stateChanged(ChangeEvent e) {
+//				if (tabbedPaneProblem.getSelectedIndex() == 1) 
+//					editVariables((int) comboVarNr.getSelectedItem());
+//			}
+//		});
 		
 		tabbedPaneProblem.insertTab("SUMBIT PROBLEM", null, new JPanel(), null , 0);
 		tabbedPaneProblem.insertTab("VARIABLE GROUP", null, new JPanel(), null , 1);
@@ -104,6 +117,8 @@ public class GUI {
 		buildProblemTab();
 		buildEmailTab();
 		buildHelpTab();
+		frame.revalidate();
+		frame.repaint();
 		
 	}
 
@@ -113,9 +128,12 @@ public class GUI {
 
 		
 		GridBagLayout gbl_panel = new GridBagLayout();
+		gbl_panel.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 40};
+		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+		gbl_panel.columnWidths = new int[]{0, 0, 0, 128, 0, 0, 71, 123, 0};
 		panel.setLayout(gbl_panel);
 
-		JLabel lbProblem = new JLabel("DESCRIPTION");
+		JLabel lbProblem = new JLabel("TITLE:");
 		GridBagConstraints gbc_lbProblem = new GridBagConstraints();
 		gbc_lbProblem.insets = new Insets(5, 5, 5, 5);
 		gbc_lbProblem.anchor = GridBagConstraints.NORTHEAST;
@@ -126,7 +144,7 @@ public class GUI {
 		txProblem = new JTextField();
 		lbProblem.setLabelFor(txProblem);
 		GridBagConstraints gbc_txProblem = new GridBagConstraints();
-		gbc_txProblem.gridwidth = 3;
+		gbc_txProblem.gridwidth = 8;
 		gbc_txProblem.insets = new Insets(5, 5, 5, 0);
 		gbc_txProblem.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txProblem.gridx = 1;
@@ -144,7 +162,7 @@ public class GUI {
 
 		txMail = new JTextField();
 		GridBagConstraints gbc_txMail = new GridBagConstraints();
-		gbc_txMail.gridwidth = 3;
+		gbc_txMail.gridwidth = 8;
 		gbc_txMail.insets = new Insets(5, 5, 5, 0);
 		gbc_txMail.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txMail.gridx = 1;
@@ -160,17 +178,18 @@ public class GUI {
 		gbc_lbDescription.gridy = 3;
 		panel.add(lbDescription, gbc_lbDescription);
 
-		txDescription = new JTextField();
+		txDescription = new JEditorPane();
+		JScrollPane sp = new JScrollPane(txDescription);
 		GridBagConstraints gbc_txDescription = new GridBagConstraints();
 		gbc_txDescription.fill = GridBagConstraints.BOTH;
 		gbc_txDescription.weighty = 1.0;
 		gbc_txDescription.weightx = 1.0;
-		gbc_txDescription.gridwidth = 4;
+		gbc_txDescription.gridwidth = 9;
 		gbc_txDescription.insets = new Insets(5, 5, 5, 0);
 		gbc_txDescription.gridx = 0;
 		gbc_txDescription.gridy = 4;
-		panel.add(txDescription, gbc_txDescription);
-		txDescription.setColumns(10);
+		panel.add(sp, gbc_txDescription);
+//		txDescription.setColumns(10);
 		txDescription.setSize(new Dimension(1000, 1000));
 
 		Component glue = Box.createGlue();
@@ -178,46 +197,99 @@ public class GUI {
 		gbc_glue.insets = new Insets(0, 0, 5, 0);
 		gbc_glue.anchor = GridBagConstraints.WEST;
 		gbc_glue.fill = GridBagConstraints.VERTICAL;
-		gbc_glue.gridwidth = 4;
+		gbc_glue.gridwidth = 9;
 		gbc_glue.gridx = 0;
 		gbc_glue.gridy = 2;
 		panel.add(glue, gbc_glue);
-
-		JLabel lbVarGroup = new JLabel("VAR GROUP NAME:");
-		GridBagConstraints gbc_lbVarGroup = new GridBagConstraints();
-		gbc_lbVarGroup.anchor = GridBagConstraints.EAST;
-		gbc_lbVarGroup.insets = new Insets(0, 0, 5, 5);
-		gbc_lbVarGroup.gridx = 0;
-		gbc_lbVarGroup.gridy = 5;
-		panel.add(lbVarGroup, gbc_lbVarGroup);
-
-		txtVarGroup = new JTextField();
-		GridBagConstraints gbc_txtVarGroup = new GridBagConstraints();
-		gbc_txtVarGroup.insets = new Insets(0, 0, 5, 5);
-		gbc_txtVarGroup.fill = GridBagConstraints.HORIZONTAL;
-		gbc_txtVarGroup.gridx = 1;
-		gbc_txtVarGroup.gridy = 5;
-		panel.add(txtVarGroup, gbc_txtVarGroup);
-		txtVarGroup.setColumns(10);
-
-		JLabel lbNrVar = new JLabel("NR OF VARIABLES:");
-		lbNrVar.setHorizontalAlignment(SwingConstants.LEFT);
-		GridBagConstraints gbc_lbNrVar = new GridBagConstraints();
-		gbc_lbNrVar.insets = new Insets(0, 0, 5, 5);
-		gbc_lbNrVar.anchor = GridBagConstraints.EAST;
-		gbc_lbNrVar.gridx = 2;
-		gbc_lbNrVar.gridy = 5;
-		panel.add(lbNrVar, gbc_lbNrVar);
-
-		comboVarNr = new JComboBox<Integer>();
-		comboVarNr.setModel(new DefaultComboBoxModel<Integer>(new Integer[] {1, 2, 3, 4, 5, 6, 7, 8}));
-		comboVarNr.setMaximumRowCount(5);
-		GridBagConstraints gbc_comboVarNr = new GridBagConstraints();
-		gbc_comboVarNr.anchor = GridBagConstraints.WEST;
-		gbc_comboVarNr.insets = new Insets(0, 0, 5, 0);
-		gbc_comboVarNr.gridx = 3;
-		gbc_comboVarNr.gridy = 5;
-		panel.add(comboVarNr, gbc_comboVarNr);
+				GridBagConstraints gbc_btnSave = new GridBagConstraints();
+				gbc_btnSave.anchor = GridBagConstraints.EAST;
+				gbc_btnSave.gridx = 8;
+				gbc_btnSave.gridy = 6;
+				btnSave.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent arg0) {
+						try {System.out.println(varList.get(0));
+							
+							pFile.writeFile();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				});
+												
+												JLabel lblMaxTime = new JLabel("MAX TIME:");
+												GridBagConstraints gbc_lblMaxTime = new GridBagConstraints();
+												gbc_lblMaxTime.anchor = GridBagConstraints.EAST;
+												gbc_lblMaxTime.insets = new Insets(0, 0, 0, 5);
+												gbc_lblMaxTime.gridx = 0;
+												gbc_lblMaxTime.gridy = 6;
+												panel.add(lblMaxTime, gbc_lblMaxTime);
+												
+												maxTime = new JSpinner();
+												maxTime.setModel(new SpinnerDateModel(new Date(1521504000000L), null, null, Calendar.DAY_OF_YEAR));
+												GridBagConstraints gbc_maxTime = new GridBagConstraints();
+												gbc_maxTime.insets = new Insets(0, 0, 0, 5);
+												gbc_maxTime.gridx = 1;
+												gbc_maxTime.gridy = 6;
+												panel.add(maxTime, gbc_maxTime);
+										
+												JLabel lbVarGroup = new JLabel("VAR GROUP NAME:");
+												GridBagConstraints gbc_lbVarGroup = new GridBagConstraints();
+												gbc_lbVarGroup.anchor = GridBagConstraints.EAST;
+												gbc_lbVarGroup.insets = new Insets(0, 0, 0, 5);
+												gbc_lbVarGroup.gridx = 2;
+												gbc_lbVarGroup.gridy = 6;
+												panel.add(lbVarGroup, gbc_lbVarGroup);
+								
+										txtVarGroup = new JTextField();
+										GridBagConstraints gbc_txtVarGroup = new GridBagConstraints();
+										gbc_txtVarGroup.insets = new Insets(0, 0, 0, 5);
+										gbc_txtVarGroup.fill = GridBagConstraints.HORIZONTAL;
+										gbc_txtVarGroup.gridx = 3;
+										gbc_txtVarGroup.gridy = 6;
+										panel.add(txtVarGroup, gbc_txtVarGroup);
+										txtVarGroup.setColumns(10);
+						
+								JLabel lbNrVar = new JLabel("NR OF VARIABLES:");
+								lbNrVar.setHorizontalAlignment(SwingConstants.LEFT);
+								GridBagConstraints gbc_lbNrVar = new GridBagConstraints();
+								gbc_lbNrVar.insets = new Insets(0, 0, 0, 5);
+								gbc_lbNrVar.anchor = GridBagConstraints.EAST;
+								gbc_lbNrVar.gridx = 4;
+								gbc_lbNrVar.gridy = 6;
+								panel.add(lbNrVar, gbc_lbNrVar);
+				
+				JSpinner spinner_1 = new JSpinner();
+				GridBagConstraints gbc_spinner_1 = new GridBagConstraints();
+				gbc_spinner_1.insets = new Insets(0, 0, 0, 5);
+				gbc_spinner_1.gridx = 5;
+				gbc_spinner_1.gridy = 6;
+				panel.add(spinner_1, gbc_spinner_1);
+				
+				JButton btnOk = new JButton("OK");
+				btnOk.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent arg0) {
+						int i = (int) spinner_1.getValue();
+						varList.clear();
+						editVariables(i);
+					}
+				});
+				GridBagConstraints gbc_btnOk = new GridBagConstraints();
+				gbc_btnOk.anchor = GridBagConstraints.WEST;
+				gbc_btnOk.insets = new Insets(0, 0, 0, 5);
+				gbc_btnOk.gridx = 6;
+				gbc_btnOk.gridy = 6;
+				panel.add(btnOk, gbc_btnOk);
+				
+				JButton btnUpload = new JButton("Upload");
+				GridBagConstraints gbc_btnUpload = new GridBagConstraints();
+				gbc_btnUpload.insets = new Insets(0, 0, 0, 5);
+				gbc_btnUpload.gridx = 7;
+				gbc_btnUpload.gridy = 6;
+				panel.add(btnUpload, gbc_btnUpload);
+				panel.add(btnSave, gbc_btnSave);
+				frame.revalidate();
+				frame.repaint();
 
 	}
 
@@ -308,7 +380,10 @@ public class GUI {
 		
 
 		tabbedPaneMain.add("E-MAIL", panel2);	
+		frame.revalidate();
+		frame.repaint();
 		}
+	
 	
 	private void buildHelpTab() {
 		JPanel panel = new JPanel();
@@ -316,7 +391,6 @@ public class GUI {
 	}
 	
 	private void editVariables(int nrVars) {
-		
 		JPanel varGroupPanel = new JPanel();
 		tabbedPaneProblem.setComponentAt(1, varGroupPanel);
 		GridBagLayout gbl_panel_1 = new GridBagLayout();
@@ -338,6 +412,8 @@ public class GUI {
 			gbc_panel.gridx = 0;
 			gbc_panel.gridy = 1 + i;
 			varGroupPanel.add(varPanel, gbc_panel);
+			frame.revalidate();
+			frame.repaint();
 		}
 	
 
@@ -411,7 +487,10 @@ public class GUI {
 		gbc_txtxy.gridy = 2;
 		varPanel.add(txtxy, gbc_txtxy);
 		txtxy.setColumns(10);
-
+		Variable v = new Variable(txtVarNa,comboBox,txtxy );
+		varList.add(v);
+		frame.revalidate();
+		frame.repaint();
 		return varPanel;
 	}
 	private class MailLoader extends Thread {
@@ -435,4 +514,28 @@ public class GUI {
 			}
 		}
 	}
+	public JTextField getTxProblem() {
+		return txProblem;
+	}
+
+	public JTextField getTxMail() {
+		return txMail;
+	}
+
+	public JEditorPane getTxDescription() {
+		return txDescription;
+	}
+
+	public JTextField getTxtVarGroup() {
+		return txtVarGroup;
+	}
+	public String getMaxTime() {
+		return ((Date)maxTime.getValue()).toString();
+	}
+
+	public ArrayList<Variable> getVarList() {
+		return varList;
+	}
+	
+	
 }
