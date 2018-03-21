@@ -2,9 +2,11 @@ package xmlPackage;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -60,7 +62,13 @@ public class CreateProbFile {
 			rootElement.setAttribute("email", gui.getTxMail().getText() );
 			
 			//TempoMax
-			rootElement.setAttribute("maxTime", gui.getMaxTime() );
+			Date now = (gui.getMaxTime());
+			   
+			DateFormat formatter = DateFormat.getInstance(); // Date and time
+		      String dateStr = formatter.format(now);
+		      System.out.println(dateStr);
+			rootElement.setAttribute("maxTime", dateStr );
+			//System.out.println(gui.getMaxTime());
 			
 			//Number of var
 //			rootElement.setAttribute("numberOfVars", ex1 );

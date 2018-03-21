@@ -1,6 +1,5 @@
 package testFrame;
 
-import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -11,32 +10,36 @@ import java.awt.Insets;
 import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.swing.Box;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JEditorPane;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import javax.swing.SpinnerDateModel;
 import javax.swing.SwingConstants;
-import javax.swing.border.EmptyBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.DefaultCaret;
@@ -44,11 +47,7 @@ import javax.swing.text.DefaultCaret;
 import mailPackage.FetchingMail;
 import variable.Variable;
 import xmlPackage.CreateProbFile;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerDateModel;
-import java.util.Date;
-import java.util.Calendar;
-import javax.swing.JProgressBar;
+import xmlPackage.LoadFile;
 
 public class GUI {
 
@@ -207,6 +206,7 @@ public class GUI {
 				gbc_btnSave.gridy = 6;
 				btnSave.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
+						if(!varList.isEmpty()) {
 						try {System.out.println(varList.get(0));
 							
 							pFile.writeFile();
@@ -214,6 +214,7 @@ public class GUI {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+					}
 					}
 				});
 												
@@ -232,7 +233,7 @@ public class GUI {
 												gbc_maxTime.gridx = 1;
 												gbc_maxTime.gridy = 6;
 												panel.add(maxTime, gbc_maxTime);
-										
+											
 												JLabel lbVarGroup = new JLabel("VAR GROUP NAME:");
 												GridBagConstraints gbc_lbVarGroup = new GridBagConstraints();
 												gbc_lbVarGroup.anchor = GridBagConstraints.EAST;
@@ -282,6 +283,18 @@ public class GUI {
 				panel.add(btnOk, gbc_btnOk);
 				
 				JButton btnUpload = new JButton("Upload");
+				btnUpload.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						JFileChooser fc = new  JFileChooser("./xml/user");
+						int returnValue = fc.showOpenDialog(null);
+				        if (returnValue == JFileChooser.APPROVE_OPTION) {
+				          File selectedFile = fc.getSelectedFile();
+				          LoadFile loadFile = new LoadFile(selectedFile, GUI.this);
+				          loadFile.load();
+				          System.out.println(selectedFile.getName());
+				        }
+					}
+				});
 				GridBagConstraints gbc_btnUpload = new GridBagConstraints();
 				gbc_btnUpload.insets = new Insets(0, 0, 0, 5);
 				gbc_btnUpload.gridx = 7;
@@ -390,7 +403,7 @@ public class GUI {
 		tabbedPaneMain.add("HELP", panel);	
 	}
 	
-	private void editVariables(int nrVars) {
+	public void editVariables(int nrVars) {
 		JPanel varGroupPanel = new JPanel();
 		tabbedPaneProblem.setComponentAt(1, varGroupPanel);
 		GridBagLayout gbl_panel_1 = new GridBagLayout();
@@ -529,12 +542,41 @@ public class GUI {
 	public JTextField getTxtVarGroup() {
 		return txtVarGroup;
 	}
-	public String getMaxTime() {
-		return ((Date)maxTime.getValue()).toString();
+	public Date getMaxTime() {
+		return ((Date)maxTime.getValue());
 	}
 
 	public ArrayList<Variable> getVarList() {
 		return varList;
+	}
+	public void setMaxTime(String s) {
+//		try {
+		//DateFormat formatter = new SimpleDateFormat("yyyy/mm/dd");
+			
+		//Date date = (Date)formatter.parse(s);
+//		JSpinner.DateEditor de = new JSpinner.DateEditor(maxTime, s);
+//		maxTime.setEditor(de);
+//		maxTime.setValue(s);
+//		} catch (ParseException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+	}
+	public void setTxProblem(String s) {
+		this.txProblem.setText(s);;
+	}
+
+	public void setTxMail(String s) {
+		this.txMail.setText(s);;
+	}
+
+	public void setTxDescription(String s) {
+		this.txDescription.setText(s);
+	}
+
+	public void setTxtVarGroup(String s) {
+		this.txtVarGroup.setText(s); ;
 	}
 	
 	
